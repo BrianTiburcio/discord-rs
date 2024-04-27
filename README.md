@@ -14,7 +14,7 @@ You can keep up to date with development on our [Discord Server](https://discord
 - Blazingly Fast!
 - Intuitive
 - Synchronous & Multi-Threaded
-- Up to date (Uses Discord's API v10 which at the time of this being written is the latest version)
+- Up to date (Uses [Discord's v10 API and Gateway](https://discord.com/developers/docs/reference#api-versioning) which at the time of this being written is the latest version)
 
 ## Getting Started
 
@@ -26,7 +26,7 @@ Although not necessary, it is recommended to use `.env` variables alongside **di
 // .env
 DISCORD_TOKEN = "YOUR_DISCORD_BOT_TOKEN"
 ```
-- Inside your rust script, use `std::env`
+- Inside your `src/main.rs` rust script, use `std::env`
 ```rust
 // src/main.rs
 use std::env;

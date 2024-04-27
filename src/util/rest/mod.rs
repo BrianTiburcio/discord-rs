@@ -1,3 +1,8 @@
+use crate::util::env::{
+    get_api_url,
+    get_client_token
+};
+
 use reqwest::blocking::{
     Client as ReqwestClient,
     Response,
@@ -40,11 +45,11 @@ fn perform_request(
     path: &str,
     body: Option<&str>,
 ) -> Result<Response, RequestError> {
-    let base_url = std::env::var("_DISCORD_API_URL")
-        .map_err(|_| RequestError::MissingEnvironmentVariable("_DISCORD_API_URL".to_owned()))?;
+    let base_url = get_api_url()
+        .map_err(|_| RequestError::MissingEnvironmentVariable("API URL".to_owned()))?;
     
-    let token = std::env::var("_CLIENT_TOKEN")
-        .map_err(|_| RequestError::MissingEnvironmentVariable("_CLIENT_TOKEN".to_owned()))?;
+    let token = get_client_token()
+        .map_err(|_| RequestError::MissingEnvironmentVariable("CLIENT TOKEN".to_owned()))?;
 
     let client = ReqwestClient::new();
     let url = format!("{}/{}", base_url, path);

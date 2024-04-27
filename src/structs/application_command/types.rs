@@ -1,11 +1,13 @@
-use std::collections::HashMap;
 use serde::Serialize;
 use serde_json::Value;
 use std::cmp::PartialEq;
 use serde_with::skip_serializing_none;
 use serde_repr::Serialize_repr;
 
-use crate::structs::channel::ChannelType;
+use crate::structs::{
+    channel::ChannelType,
+    locale::Localizations
+};
 
 #[skip_serializing_none]
 #[derive(Serialize, Clone, Debug)]
@@ -16,9 +18,9 @@ pub struct ApplicationCommand {
     pub application_id: String,
     pub guild_id: Option<String>,
     pub name: String,
-    pub name_localizations: Option<HashMap<String, String>>,
+    pub name_localizations: Option<Localizations>,
     pub description: String,
-    pub description_localizations: Option<HashMap<String, String>>,
+    pub description_localizations: Option<Localizations>,
     pub options: Option<Vec<ApplicationCommandOption>>,
     pub default_member_permissions: Option<String>,
     pub dm_permissions: Option<bool>,
@@ -33,9 +35,9 @@ pub struct ApplicationCommandOption {
     #[serde(rename = "type")]
     pub command_type: ApplicationCommandOptionType,
     pub name: String,
-    pub name_localizations: Option<HashMap<String, String>>,
+    pub name_localizations: Option<Localizations>,
     pub description: String,
-    pub description_localizations: Option<HashMap<String, String>>,
+    pub description_localizations: Option<Localizations>,
     pub required: Option<bool>,
     pub choices: Option<Vec<ApplicationCommandOptionChoice>>,
     pub options: Option<Vec<ApplicationCommandOption>>,
@@ -51,7 +53,7 @@ pub struct ApplicationCommandOption {
 #[derive(Serialize, Debug, Clone)]
 pub struct ApplicationCommandOptionChoice {
     pub name: String,
-    pub name_localizations: Option<HashMap<String, String>>,
+    pub name_localizations: Option<Localizations>,
     pub value: Value
 }
 

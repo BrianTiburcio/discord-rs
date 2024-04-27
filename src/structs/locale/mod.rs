@@ -1,5 +1,8 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::fmt;
+use std::{
+    fmt,
+    collections::HashMap
+};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub enum Locale {
@@ -7,7 +10,7 @@ pub enum Locale {
     Danish,
     German,
     EnglishUK,
-    EnglisjUS,
+    EnglishUS,
     Spanish,
     French,
     Croatian,
@@ -36,9 +39,11 @@ pub enum Locale {
     Korean
 }
 
+pub type Localizations = HashMap::<Locale, String>;
+
 impl Default for Locale {
     fn default() -> Self {
-        Self::EnglisjUS
+        Self::EnglishUS
     }
 }
 
@@ -49,7 +54,7 @@ impl fmt::Display for Locale {
             Locale::Danish => "da",
             Locale::German => "de",
             Locale::EnglishUK => "en-GB",
-            Locale::EnglisjUS => "en-US",
+            Locale::EnglishUS => "en-US",
             Locale::Spanish => "es-ES",
             Locale::French => "fr",
             Locale::Croatian => "hr",
@@ -91,7 +96,7 @@ where
         "da" => Ok(Locale::Danish),
         "de" => Ok(Locale::German),
         "en-GB" => Ok(Locale::EnglishUK),
-        "en-US" => Ok(Locale::EnglisjUS),
+        "en-US" => Ok(Locale::EnglishUS),
         "es-ES" => Ok(Locale::Spanish),
         "fr" => Ok(Locale::French),
         "hr" => Ok(Locale::Croatian),
@@ -118,7 +123,7 @@ where
         "ja" => Ok(Locale::Japonese),
         "zh-TW" => Ok(Locale::ChineseTaiwan),
         "ko" => Ok(Locale::Korean),
-        _ => unimplemented!("Locale \"{}\" has not been implemented", locale_string),
+        _ => unimplemented!("Locale \"{locale_string}\" has not been implemented"),
     }
 }
 

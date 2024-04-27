@@ -7,7 +7,11 @@ use std::{
 
 use crate::{
     util::socket::{Message, Socket},
-    util::env::{set_client_token, set_api_url},
+    util::env::{
+        set_client_token,
+        get_client_token,
+        set_api_url
+    },
     structs::timestamp::Timestamp,
     managers::{
         ClientManager,
@@ -96,7 +100,11 @@ fn _handle_events(
 ) -> JoinHandle<()> {
     let intents = Arc::new(Mutex::new(intents));
 
-    thread::spawn(move || {
+    let builder = thread::Builder::new()
+        // 128 MB stack size
+        .stack_size(128 * 1e6 as usize);
+
+    builder.spawn(move || {
         let mut socket = socket.lock().unwrap();
         let mut last_sequence = 0_usize;
         let mut interval = Duration::from_secs(999_999);
@@ -152,6 +160,8 @@ fn _handle_events(
                                 //     &dispatch_data
                                 // );
 
+                                //println!("{:#?}: {:#?}", dispatch_type, dispatch_data);
+
                                 // Depending on the type of event, we can update some cache
                                 // Allow the event to be handled by the end-user
                                 let _ = dispatch_sender.send((dispatch_type, dispatch_data));
@@ -174,7 +184,7 @@ fn _handle_events(
                         },
                         // Connection was likely dropped on discord's end. Mend it
                         GatewayEvent::Reconnect => {
-                            let token = std::env::var("_CLIENT_TOKEN")
+                            let token = get_client_token()
                                 .expect("Could not get user token!");
 
                             // TODO: Create new connection
@@ -194,7 +204,7 @@ fn _handle_events(
                             println!("Got invalid session event: {:#?}", event);
                         },
                         GatewayEvent::Hello => {
-                            let token = std::env::var("_CLIENT_TOKEN")
+                            let token = get_client_token()
                                 .expect("Could not get user token!");
 
                             // Get and send the identify payload
@@ -231,7 +241,7 @@ fn _handle_events(
                 _ => { break; }
             }
         }
-    })
+    }).unwrap()
 }
 
 fn _patch_cache(

@@ -6,6 +6,7 @@ pub fn permission_type_deserializer<'de, D>(deserializer: D) -> Result<Permissio
 where
     D: Deserializer<'de>,
 {
+    
     let index: u8 = Deserialize::deserialize(deserializer)?;
     match index {
         0 => Ok(PermissionType::Role),

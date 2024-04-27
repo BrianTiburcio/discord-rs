@@ -1,5 +1,4 @@
 use dotenv;
-use std::collections::HashMap;
 
 use discord_rs::structs::client::{
     Client,
@@ -9,7 +8,7 @@ use discord_rs::structs::client::{
 
 use discord_rs::structs::{
     message::Message,
-    locale::Locale,
+    locale::{Locale, Localizations},
     message_payload::MessagePayload
 };
 
@@ -72,7 +71,7 @@ fn on_ready(
                 .add_choice(
                     "Two",
                     "2",
-                    Some(HashMap::<Locale, String>::from([
+                    Some(Localizations::from([
                         (Locale::Spanish, "Dos".to_string()),
                         (Locale::French, "Deux".to_string())
                     ]))
@@ -110,7 +109,7 @@ fn on_message(
         let _ = channel.send(payload);
     }
 
-    //let _ = message.channel.send(payload);
+    // let _ = message.channel.send(payload);
     // message.send()
 }
 

@@ -1,4 +1,4 @@
-use serde_json::{Map, Value};
+use serde_json::{Map, Value, from_str};
 
 use super::{
     Channel,
@@ -47,12 +47,18 @@ impl PermissionOverwrite {
 }
 
 fn _fetch(channel_id: &Snowflake) -> Result<Channel, &'static str> {
+    println!("Fetching channel: {}", channel_id);
     let request = get(&format!("/channels/{}", channel_id))
         .expect("Request failed to send");
 
     let json_string = request.text()
         .expect("Failed to fetch channel from API");
 
-    Ok(serde_json::from_str(&json_string)
-        .expect("Failed to fetch channel from API"))
+    // let channel = from_str::<Channel>(&json_string)
+    //     .expect("Failed to deserialize the channel object");
+
+    let channel = from_str::<Channel>(&json_string)
+        .expect("Failed to deserialize the channel object");
+
+    Ok(channel)
 }

@@ -1,10 +1,9 @@
-use std::collections::HashMap;
 use std::any::Any;
 use serde_json::Value;
 
 use crate::structs::{
     snowflake::SnowflakeBuilder,
-    locale::Locale,
+    locale::{Locale, Localizations},
     application_command::{
         ApplicationCommand,
         ApplicationCommandOption,
@@ -65,25 +64,25 @@ impl SlashCommandBuilder {
 
     /// Sets [ApplicationCommand] `name` localizations
     pub fn add_name_localization(mut self, locale: Locale, translation: String) -> Self {
-        let name_localizations = self.name_localizations.get_or_insert_with(HashMap::new);
-        name_localizations.insert(locale.to_string(), translation);
+        let name_localizations = self.name_localizations.get_or_insert_with(Localizations::new);
+        name_localizations.insert(locale, translation);
         self
     }
 
     /// Appends a collection of [ApplicationCommand] `name` localizations at once
     pub fn add_name_localizations(mut self, localizations: &[(Locale, String)]) -> Self {
-        let name_localizations = self.name_localizations.get_or_insert_with(HashMap::new);
+        let name_localizations = self.name_localizations.get_or_insert_with(Localizations::new);
         for &(locale, ref translation) in localizations {
-            name_localizations.entry(locale.to_string()).or_insert(translation.clone());
+            name_localizations.entry(locale).or_insert(translation.clone());
         }
         self
     }
 
     /// Sets a collection of [ApplicationCommand] `name` localizations at once
-    pub fn set_name_localization(mut self, localizations: HashMap<Locale, String>) -> Self {
-        let mut name_localizations = HashMap::<String, String>::new();
+    pub fn set_name_localization(mut self, localizations: Localizations) -> Self {
+        let mut name_localizations = Localizations::new();
         for (locale, translation) in localizations {
-            name_localizations.entry(locale.to_string()).or_insert(translation.clone());
+            name_localizations.entry(locale).or_insert(translation.clone());
         }
         
         self.name_localizations = Some(name_localizations);
@@ -92,17 +91,17 @@ impl SlashCommandBuilder {
 
     /// Sets a collection of [ApplicationCommand] `description` localizations at once
     pub fn add_description_localizations(mut self, localizations: &[(Locale, String)]) -> Self {
-        let description_localizations = self.description_localizations.get_or_insert_with(HashMap::new);
+        let description_localizations = self.description_localizations.get_or_insert_with(Localizations::new);
         for &(locale, ref translation) in localizations {
-            description_localizations.entry(locale.to_string()).or_insert(translation.clone());
+            description_localizations.entry(locale).or_insert(translation.clone());
         }
         self
     }
 
     /// Sets a singular [ApplicationCommand] `description` localization
     pub fn add_description_localization(mut self, locale: Locale, translation: String) -> Self {
-        let description_localizations = self.description_localizations.get_or_insert_with(HashMap::new);
-        description_localizations.insert(locale.to_string(), translation);
+        let description_localizations = self.description_localizations.get_or_insert_with(Localizations::new);
+        description_localizations.insert(locale, translation);
         self
     }
 
@@ -264,7 +263,7 @@ impl SlashCommandOptionBuilder {
         mut self,
         name: &str,
         value: T,
-        localizations: Option<HashMap<Locale, String>>
+        localizations: Option<Localizations>
     ) -> Self
     where T: Any {
         let mut option_choice = ApplicationCommandOptionChoice {
@@ -274,9 +273,9 @@ impl SlashCommandOptionBuilder {
         };
     
         if let Some(map) = localizations {
-            let name_localizations: HashMap<String, String> = map
+            let name_localizations: Localizations = map
                 .into_iter()
-                .map(|(locale, translation)| (locale.to_string(), translation))
+                .map(|(locale, translation)| (locale, translation))
                 .collect();
     
             option_choice.name_localizations = Some(name_localizations);
@@ -297,33 +296,33 @@ impl SlashCommandOptionBuilder {
 
     /// Sets a collection of [ApplicationCommandOption] `name` localizations at once
     pub fn add_name_localizations(mut self, localizations: &[(Locale, String)]) -> Self {
-        let name_localizations = self.name_localizations.get_or_insert_with(HashMap::new);
+        let name_localizations = self.name_localizations.get_or_insert_with(Localizations::new);
         for &(locale, ref translation) in localizations {
-            name_localizations.entry(locale.to_string()).or_insert(translation.clone());
+            name_localizations.entry(locale).or_insert(translation.clone());
         }
         self
     }
 
     /// Sets a singular [ApplicationCommandOption] `name` localization
     pub fn add_name_localization(mut self, locale: Locale, translation: String) -> Self {
-        let name_localizations = self.name_localizations.get_or_insert_with(HashMap::new);
-        name_localizations.insert(locale.to_string(), translation);
+        let name_localizations = self.name_localizations.get_or_insert_with(Localizations::new);
+        name_localizations.insert(locale, translation);
         self
     }
 
     /// Sets a collection of [ApplicationCommandOption] `description` localizations at once
     pub fn add_description_localizations(mut self, localizations: &[(Locale, String)]) -> Self {
-        let description_localizations = self.description_localizations.get_or_insert_with(HashMap::new);
+        let description_localizations = self.description_localizations.get_or_insert_with(Localizations::new);
         for &(locale, ref translation) in localizations {
-            description_localizations.entry(locale.to_string()).or_insert(translation.clone());
+            description_localizations.entry(locale).or_insert(translation.clone());
         }
         self
     }
 
     /// Sets a singular [ApplicationCommandOption] `description` localization
     pub fn add_description_localization(mut self, locale: Locale, translation: String) -> Self {
-        let description_localizations = self.description_localizations.get_or_insert_with(HashMap::new);
-        description_localizations.insert(locale.to_string(), translation);
+        let description_localizations = self.description_localizations.get_or_insert_with(Localizations::new);
+        description_localizations.insert(locale, translation);
         self
     }
 
@@ -361,12 +360,14 @@ fn is_valid_name(name: &str) -> bool {
 }
 
 fn validate_length(string: &str, max_length: u32, min_length: Option<u32>) -> Result<(), String> {
-    if string.len() as u32 > max_length {
+    let length = string.len() as u32;
+    
+    if length as u32 > max_length {
         return Err(format!("Length of '{}' exceeds {} characters", string, max_length));
     }
 
     if let Some(min_length) = min_length {
-        if (string.len() as u32) < min_length {
+        if (length as u32) < min_length {
             return Err(format!("Length of '{}' is less than {} characters", string, min_length));
         }
     }

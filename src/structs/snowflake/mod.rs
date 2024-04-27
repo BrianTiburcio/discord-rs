@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize, Deserializer};
 use serde_json::Value;
 use std::fmt;
 
-pub struct SnowflakeBuilder {
+pub(crate) struct SnowflakeBuilder {
     worker_id: u16,
     sequence: u16,
     /// Milliseconds since Discord Epoch, the first second of 2015
