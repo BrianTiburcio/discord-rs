@@ -19,7 +19,7 @@ fn deserialize_channel_client() {
 
     //client.connect().expect("Failed to login");
 
-    let id = Snowflake::String("1120716431642865704".to_string());
+    let id = Snowflake::from("1120716431642865704".to_string());
     let channel = client.cache.get_channel(&id);
 
     println!("Channel: {channel:?}");

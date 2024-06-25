@@ -49,6 +49,18 @@ impl From<Snowflake> for u64 {
     }
 }
 
+impl From<String> for Snowflake {
+    fn from(value: String) -> Self {
+        Snowflake::String(value)
+    }
+}
+
+impl From<u64> for Snowflake {
+    fn from(value: u64) -> Self {
+        Snowflake::Number(value)
+    }
+}
+
 impl fmt::Display for Snowflake {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

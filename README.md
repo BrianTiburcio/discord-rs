@@ -1,4 +1,4 @@
-![alt text](/assets/discord-rs-banner-white.png)
+![DiscordRS Banner](/assets/discord-rs-banner-white.png)
 
 # Discord-RS
 

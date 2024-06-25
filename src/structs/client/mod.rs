@@ -26,8 +26,14 @@ mod structs;
 pub use enums::*;
 pub use structs::*;
 
-/// The gateway version of Discord's API to use
+// The gateway version of Discord's API to use
 const API_VERSION: u8 = 10;
+/// The size of the stack for the event handler thread
+const STACK_SIZE_MB: usize = 256;
+const STACK_SIZE_BYTES: usize = STACK_SIZE_MB * 1_000_000;
+
+/// The jitter to add to the heartbeat interval
+const HEARTBEAT_JITTER: f32 = 0.1;
 
 impl Client {
     pub fn new(token: &str, intents: &[GatewayIntents]) -> Self {
@@ -102,7 +108,7 @@ fn _handle_events(
 
     let builder = thread::Builder::new()
         // 128 MB stack size
-        .stack_size(128 * 1e6 as usize);
+        .stack_size(STACK_SIZE_BYTES);
 
     builder.spawn(move || {
         let mut socket = socket.lock().unwrap();
@@ -224,7 +230,7 @@ fn _handle_events(
                                 // 0.25 is an arbitrarily chosen value meant to represent the jitter
                                 // Since the jitter is only needed once, this is a better approach
                                 // than using an entire library to create the suggested randomness
-                                next_heartbeat = Instant::now() + Duration::from_millis(((new_interval as f32) * 0.1) as u64);
+                                next_heartbeat = Instant::now() + Duration::from_millis(((new_interval as f32) * HEARTBEAT_JITTER) as u64);
                             }
                         },
                         GatewayEvent::HeartbeatAcknowledge => {
@@ -249,7 +255,7 @@ fn _patch_cache(
     dispatch_type: &ExternalDispatchEvent,
     dispatch_data: &Value
 ) {
-    
+    todo!();
 }
 
 // Returns a heartbeat structure to send to Discord
@@ -260,9 +266,8 @@ fn _get_heartbeat(sequence: usize) -> Message {
         s: None,
         t: None,
     };
-
-    let heartbeat = serde_json::to_string(&heartbeat).unwrap();
-    Message::text(heartbeat)                            
+    
+    Message::text(serde_json::to_string(&heartbeat).unwrap())
 }
 
 fn _get_identify(token: &String, intents: &u64) -> Message {

@@ -20,7 +20,10 @@ impl ClientManager {
         // If we dont have a cache of the channel...
         if !self.has(&key) {
              // Fetch the channel from the API
-             let channel = ClientResource::Channel(Channel::new(&channel_id)?);
+             let channel = match Channel::new(&channel_id) {
+                 Ok(channel) => ClientResource::Channel(channel),
+                 Err(err) => return Err(err),
+             };
              // Commit the channel to cache
              self.set(channel_id.to_string(), channel);
         }

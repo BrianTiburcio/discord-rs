@@ -9,14 +9,8 @@ use discord_rs::structs::client::{
 use discord_rs::structs::{
     message::Message,
     locale::{Locale, Localizations},
-    message_payload::MessagePayload
-};
-
-use discord_rs::builders::{
-    ClientBuilder,
-    SlashCommandBuilder,
-    SlashCommandOptionBuilder,
-    SlashCommandOptionType
+    message_payload::MessagePayload,
+    application_command::{ApplicationCommand, ApplicationCommandOption, ApplicationCommandOptionType}
 };
 
 pub fn main() {
@@ -28,7 +22,7 @@ pub fn main() {
         GatewayIntents::MessageContent
     ];
 
-    let mut client = ClientBuilder::new(&token, intents);
+    let mut client = Client::new(&token, intents);
 
     let events = client.connect()
         .expect("Failed to login");
@@ -54,7 +48,7 @@ fn on_ready(
 ) {
     println!("Received on_ready command");
     
-    let command = SlashCommandBuilder::new("12345678987654321")
+    let command = ApplicationCommand::new("12345678987654321")
         .set_name("test-command")
         .set_description("A command that tests things")
         .set_dm_permission(false)
@@ -63,7 +57,7 @@ fn on_ready(
             (Locale::French, String::from("commando-prueba"))
         ])
         .add_string_option(
-            SlashCommandOptionBuilder::new(SlashCommandOptionType::String)
+            ApplicationCommandOption::new(ApplicationCommandOptionType::String)
                 .set_name("favorite_number")
                 .set_description("Your favorite number")
                 .set_required(true)
@@ -78,7 +72,7 @@ fn on_ready(
                 )
         ).unwrap()
         .add_integer_option(
-            SlashCommandOptionBuilder::new(SlashCommandOptionType::Integer)
+            ApplicationCommandOption::new(ApplicationCommandOptionType::Integer)
                 .set_name("usertwo")
                 .set_description("The user to test on")
                 .set_required(true)

@@ -16,7 +16,8 @@ use crate::{
 
 impl Channel {
     pub fn new(channel_id: &Snowflake) -> Result<Self, &'static str> {
-        _fetch(&channel_id)
+        // Directly call _fetch without introducing recursion
+        _fetch(channel_id)
     }
 
     /// Send a [MessagePayload] to this channel
@@ -26,7 +27,7 @@ impl Channel {
         let res = post(&format!("/channels/{}/messages", &self.id), &payload)
             .expect("Failed to send message to channel");
 
-        if res.status() != 200 {
+        if !res.status().is_success() {
             return Err("Message was not sent successfully");
         }
 
@@ -54,10 +55,8 @@ fn _fetch(channel_id: &Snowflake) -> Result<Channel, &'static str> {
     let json_string = request.text()
         .expect("Failed to fetch channel from API");
 
-    // let channel = from_str::<Channel>(&json_string)
-    //     .expect("Failed to deserialize the channel object");
-
-    let channel = from_str::<Channel>(&json_string)
+    // Directly deserialize into a Channel without calling Channel::new
+    let channel: Channel = from_str(&json_string)
         .expect("Failed to deserialize the channel object");
 
     Ok(channel)
