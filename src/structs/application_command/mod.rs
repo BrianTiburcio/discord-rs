@@ -31,6 +31,25 @@ impl ApplicationCommand {
         }
     }
 
+    pub fn build(self) -> Self {
+        Self {
+            id: self.id,
+            command_type: self.command_type,
+            application_id: self.application_id,
+            guild_id: self.guild_id,
+            name: self.name,
+            name_localizations: self.name_localizations,
+            description: self.description,
+            description_localizations: self.description_localizations,
+            options: self.options,
+            default_member_permissions: self.default_member_permissions,
+            dm_permissions: self.dm_permissions,
+            default_permissions: self.default_permissions,
+            nsfw: self.nsfw,
+            version: self.version,
+        }
+    }
+
     /// Sets the name of the slash command
     /// # Panics
     /// This function panics if `name` has more than 32 characters

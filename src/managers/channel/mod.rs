@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::managers::CacheManager;
 use crate::structs::{
     channel::Channel,
@@ -8,6 +7,11 @@ use crate::structs::{
 
 pub mod types;
 pub use types::*;
+
+#[derive(Debug)]
+pub enum ChannelError {
+    NotFound
+}
 
 impl ChannelManager {
     pub fn new() -> Self {
@@ -22,13 +26,13 @@ impl ChannelManager {
         Self::_patch(self, &channel.id);
     }
 
-    pub fn fetch_by_id(&mut self, id: &str) -> Result<Box<Channel>, &'static str> {
+    pub fn fetch_by_id(&mut self, id: &str) -> Result<Box<Channel>, ChannelError> {
         let channels = Self::fetch(self, &[id]);
         if channels.len() == 1 {
             return Ok(channels[0].clone());
         }
     
-        Err("Could not find channel")
+        Err(ChannelError::NotFound)
     }
 
     pub fn fetch(&mut self, ids: &[&str]) -> Vec<Box<Channel>> {

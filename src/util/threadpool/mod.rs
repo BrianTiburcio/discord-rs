@@ -1,21 +1,31 @@
-use std::thread;
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender, Receiver};
+use std::{
+    sync::{Arc, Mutex},
+    sync::mpsc::{channel, Sender, Receiver},
+    thread,
+};
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
+type BoxedJob = Box<dyn FnOnce() + Send + 'static>;
 
 enum Message {
-    NewJob(Job),
+    NewJob(BoxedJob),
     Terminate,
 }
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: Sender<Message>
+    sender: Sender<Message>,
+}
+
+pub struct Worker {
+    id: usize,
+    thread: Option<thread::JoinHandle<()>>,
 }
 
 impl ThreadPool {
+    /// Create a new ThreadPool with a maximum number of threads.
     pub fn new(size: usize) -> Self {
+        assert!(size > 0);
+
         let (sender, receiver) = channel();
         let receiver = Arc::new(Mutex::new(receiver));
 
@@ -27,6 +37,7 @@ impl ThreadPool {
         Self { workers, sender }
     }
 
+    /// Execute a function on a worker thread.
     pub fn execute<F>(&self, f: F)
     where
         F: FnOnce() + Send + 'static,
@@ -38,24 +49,18 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        println!("Sending Terminate to all workers.");
+        // Send a terminate message to all workers.
         for _ in &self.workers {
             self.sender.send(Message::Terminate).unwrap();
         }
 
-        println!("Shutting down all workers.");
+        // Wait for all workers to finish.
         for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();
             }
         }
     }
-}
-
-pub struct Worker {
-    id: usize,
-    thread: Option<thread::JoinHandle<()>>,
 }
 
 impl Worker {
@@ -65,11 +70,9 @@ impl Worker {
                 let message = receiver.lock().unwrap().recv().unwrap();
                 match message {
                     Message::NewJob(job) => {
-                        println!("Worker {} got a job; executing.", id);
                         job();
                     }
                     Message::Terminate => {
-                        println!("Worker {} was told to terminate.", id);
                         break;
                     }
                 }

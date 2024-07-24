@@ -7,6 +7,7 @@ use std::{
 
 use crate::{
     util::socket::{Message, Socket},
+    util::threadpool::ThreadPool,
     util::env::{
         set_client_token,
         get_client_token,
@@ -22,6 +23,7 @@ use crate::{
 
 mod enums;
 mod structs;
+pub mod traits;
 
 pub use enums::*;
 pub use structs::*;
@@ -54,6 +56,7 @@ impl Client {
             guilds: GuildManager::new(),
             ready_at: Timestamp::now(),
             token: token.to_string(),
+            threadpool: ThreadPool::new(4),
             intents
         }
     }

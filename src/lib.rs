@@ -26,7 +26,8 @@ pub mod structs {
     pub mod webhook;
 }
 
-pub(crate) mod util {
+// TOOD: make this pub(crate) again
+pub mod util {
     pub mod rest;
     pub mod threadpool;
     pub mod socket;

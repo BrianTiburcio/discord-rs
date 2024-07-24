@@ -15,17 +15,9 @@ edition = "2021"
 rust-version = "1.75.0"
 
 include = [
-    "**/*.rs",
+    "src/**",
     "Cargo.toml",
-]
-
-exclude = [
-    ".ignore/*",
-    "assets/*",
-    "tests/*",
-    "examples/*",
-    "src/examples/*",
-    "target/*"
+    "LICENSE"
 ]
 
 [lib]
@@ -36,13 +28,15 @@ webhooks = []
 
 [dependencies]
 chrono = "0.4.38"
-dotenv = "0.15.0"
 native-tls = "0.2.12"
-reqwest = { version = "0.12.4", features = ["blocking", "json"] }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = { version = "1.0.117", features = ["unbounded_depth"] }
+reqwest = { version = "0.12.5", features = ["blocking", "json"] }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = { version = "1.0.120", features = ["unbounded_depth"] }
 serde_repr = "0.1.19"
-serde_with = "3.8.1"
+serde_with = "3.9.0"
 serde_stacker = "0.1.11"
 tungstenite = { version = "0.23.0", features = ["native-tls"] }
-url = "2.5.0"
+url = "2.5.2"
+
+[dev-dependencies]
+dotenv = "0.15.0"

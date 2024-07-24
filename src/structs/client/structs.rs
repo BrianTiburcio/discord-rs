@@ -6,6 +6,7 @@ use std::ops::Index;
 
 use crate::{
     structs::timestamp::Timestamp,
+    util::threadpool::ThreadPool,
     managers::{
         ChannelManager,
         ClientManager,
@@ -28,6 +29,7 @@ pub struct Client {
     pub channels: ChannelManager,
     pub(crate) ready_at: Timestamp,
     pub(crate) token: String,
+    pub(crate) threadpool: ThreadPool,
     // TODO: pub user: User,
     pub intents: u64
 }
