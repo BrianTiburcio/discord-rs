@@ -37,6 +37,12 @@ pub struct CacheManager<CacheData> {
     cache: HashMap<String, Cache<CacheData>>,
 }
 
+impl<CacheData> Default for CacheManager<CacheData> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<CacheData> CacheManager<CacheData> {
     pub fn new() -> Self {
         Self { cache: HashMap::new() }
@@ -48,7 +54,7 @@ impl<CacheData> CacheManager<CacheData> {
 
     pub fn get(&self, key: &str) -> Option<&CacheData> {
         if self.has(key) {
-            return Some(self.get(key)?)
+            return self.get(key)
         }
 
         None

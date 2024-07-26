@@ -8,8 +8,6 @@ use crate::structs::{
 
 use super::{
     ChannelType,
-    PermissionType,
-    permission_type_deserializer,
     channel_type_deserializer
 };
 

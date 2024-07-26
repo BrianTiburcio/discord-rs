@@ -1,9 +1,5 @@
-use discord_rs::structs::{
-    client::{Client, GatewayIntents},
-    snowflake::Snowflake
-};
+use discord_rs::structs::client::{Client, GatewayIntents};
 
-use dotenv;
 
 #[test]
 fn create_client() {

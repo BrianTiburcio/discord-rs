@@ -56,7 +56,7 @@ impl ApplicationCommand {
     /// or fails to pass the RegEx check against `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$`
     pub fn set_name(mut self, name: &str) -> Self {
         let length = name.len() as u32;
-        if length < 1 || length > 32 {
+        if !(1..=32).contains(&length) {
             panic!("'{name}' is not the right length! Slash command names must be between 1-32 characters");
         }
         
@@ -252,7 +252,7 @@ impl ApplicationCommandOption {
     /// or fails to pass the RegEx check against `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$`
     pub fn set_name(mut self, name: &str) -> Self {
         let length = name.len() as u32;
-        if length < 1 || length > 100 {
+        if !(1..=100).contains(&length) {
             panic!("'{name}' is not the right length! Command option names must be between 1-100 characters");
         }
         
@@ -286,7 +286,6 @@ impl ApplicationCommandOption {
         if let Some(map) = localizations {
             let name_localizations: Localizations = map
                 .into_iter()
-                .map(|(locale, translation)| (locale, translation))
                 .collect();
     
             option_choice.name_localizations = Some(name_localizations);
@@ -373,12 +372,12 @@ fn is_valid_name(name: &str) -> bool {
 fn validate_length(string: &str, max_length: u32, min_length: Option<u32>) -> Result<(), String> {
     let length = string.len() as u32;
     
-    if length as u32 > max_length {
+    if length > max_length {
         return Err(format!("Length of '{}' exceeds {} characters", string, max_length));
     }
 
     if let Some(min_length) = min_length {
-        if (length as u32) < min_length {
+        if length < min_length {
             return Err(format!("Length of '{}' is less than {} characters", string, min_length));
         }
     }

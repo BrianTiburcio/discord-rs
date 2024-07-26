@@ -6,6 +6,12 @@ use crate::structs::guild::Guild;
 pub mod types;
 pub use types::*;
 
+impl Default for GuildManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GuildManager {
     pub fn new() -> Self {
         Self {

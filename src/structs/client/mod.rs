@@ -1,7 +1,7 @@
 use serde_json::{json, Value};
 use std::{
     sync::{Arc, Mutex, mpsc::{self, Receiver}},
-    thread::{self, JoinHandle, panicking},
+    thread::{self, JoinHandle},
     time::{Instant, Duration}
 };
 
@@ -9,9 +9,9 @@ use crate::{
     util::socket::{Message, Socket},
     util::threadpool::ThreadPool,
     util::env::{
-        set_client_token,
-        get_client_token,
-        set_api_url
+        _set_client_token,
+        _get_client_token,
+        _set_api_url
     },
     structs::timestamp::Timestamp,
     managers::{
@@ -40,8 +40,8 @@ const HEARTBEAT_JITTER: f32 = 0.1;
 impl Client {
     pub fn new(token: &str, intents: &[GatewayIntents]) -> Self {
         // Make some globally-available env vars
-        set_client_token(token);
-        set_api_url(&API_VERSION);
+        _set_client_token(token);
+        _set_api_url(&API_VERSION);
 
         // Condense the intent permissions into bits
         let intents = intents
@@ -81,10 +81,6 @@ impl Client {
             self.intents,
             //Arc::clone(&caches)
         );
-
-        if _event_handler_thread.join().is_err() {
-            println!("Event handler thread errored!");
-        }
 
         // Ideally here we'd yield the receiver
         // but yielding is not yet stable in rust
@@ -158,10 +154,7 @@ fn _handle_events(
                     match event_type {
                         GatewayEvent::Dispatch => {
                             let dispatch_data = event.d.unwrap();
-                            let dispatch_type = event.t
-                                .as_ref()
-                                .and_then(|t| Some(t.as_str()))
-                                .and_then(|dispatch_type| Some(DispatchEventIndexer[dispatch_type]))
+                            let dispatch_type = event.t.as_deref().map(|dispatch_type| DispatchEventIndexer[dispatch_type])
                                 .expect("Failed to deserialize event type for dispatch event");
 
                             // Only inform the end user of dispatch events that they can handle
@@ -197,14 +190,14 @@ fn _handle_events(
                         },
                         // Connection was likely dropped on discord's end. Mend it
                         GatewayEvent::Reconnect => {
-                            let token = get_client_token()
+                            let token = _get_client_token()
                                 .expect("Could not get user token!");
 
                             // TODO: Create new connection
                             // Get and send the identify payload
                             // This allows to start receiving other events
                             let identify = _get_identify(&token, &intents);
-                            let _ = socket.send(identify)
+                            socket.send(identify)
                                 .expect("Failed to send identify payload");
 
                             panic!("Disconnected from the socket!");
@@ -217,13 +210,13 @@ fn _handle_events(
                             println!("Got invalid session event: {:#?}", event);
                         },
                         GatewayEvent::Hello => {
-                            let token = get_client_token()
+                            let token = _get_client_token()
                                 .expect("Could not get user token!");
 
                             // Get and send the identify payload
                             // This allows to start receiving other events
                             let identify = _get_identify(&token, &intents);
-                            let _ = socket.send(identify)
+                            socket.send(identify)
                                 .expect("Failed to send identify payload");
 
                             // Set the interval and the next heartbeat

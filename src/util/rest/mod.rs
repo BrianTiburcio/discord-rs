@@ -1,6 +1,6 @@
 use crate::util::env::{
-    get_api_url,
-    get_client_token
+    _get_api_url,
+    _get_client_token
 };
 
 use reqwest::blocking::{
@@ -45,10 +45,10 @@ fn perform_request(
     path: &str,
     body: Option<&str>,
 ) -> Result<Response, RequestError> {
-    let base_url = get_api_url()
+    let base_url = _get_api_url()
         .map_err(|_| RequestError::MissingEnvironmentVariable("API URL".to_owned()))?;
     
-    let token = get_client_token()
+    let token = _get_client_token()
         .map_err(|_| RequestError::MissingEnvironmentVariable("CLIENT TOKEN".to_owned()))?;
 
     let client = ReqwestClient::new();
@@ -67,5 +67,5 @@ fn perform_request(
         .header("Content-Type", "application/json")
         .body(body.unwrap_or("").to_owned())
         .send()
-        .map_err(|op| RequestError::HttpClientError(op))
+        .map_err(RequestError::HttpClientError)
 }

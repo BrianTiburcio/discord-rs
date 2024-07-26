@@ -65,7 +65,7 @@ impl fmt::Display for Snowflake {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Snowflake::String(snowflake) => write!(f, "{}", snowflake),
-            Snowflake::Number(snowflake) => write!(f, "{}", snowflake.to_string()),
+            Snowflake::Number(snowflake) => write!(f, "{}", snowflake),
         }
     }
 }

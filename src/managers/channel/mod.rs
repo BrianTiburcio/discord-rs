@@ -13,6 +13,12 @@ pub enum ChannelError {
     NotFound
 }
 
+impl Default for ChannelManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ChannelManager {
     pub fn new() -> Self {
         Self { cache: CacheManager::<Box<Channel>>::new() }

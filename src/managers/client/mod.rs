@@ -20,7 +20,7 @@ impl ClientManager {
         // If we dont have a cache of the channel...
         if !self.has(&key) {
              // Fetch the channel from the API
-             let channel = match Channel::new(&channel_id) {
+             let channel = match Channel::new(channel_id) {
                  Ok(channel) => ClientResource::Channel(channel),
                  Err(err) => return Err(err),
              };
@@ -30,7 +30,7 @@ impl ClientManager {
 
         // Make sure the given ID belongs to the appropriate variant
         match self.get(&key).expect("Could not retrieve the channel") {
-            ClientResource::Channel(channel) => Ok(&channel),
+            ClientResource::Channel(channel) => Ok(channel),
             _ => Err("Given id does not belong to a channel"),
         }
     }

@@ -1,7 +1,4 @@
-use discord_rs::structs::{
-    client::{Client, GatewayIntents},
-    snowflake::Snowflake
-};
+use discord_rs::structs::client::{Client, ExternalDispatchEvent, GatewayIntents};
 
 fn main() {
     #[cfg(test)]
@@ -17,5 +14,14 @@ fn main() {
     ];
 
     let mut client = Client::new(&token, intents);
-    let _ = client.connect();
+    let events = client.connect().expect("Error connecting to gateway");
+
+    if let Ok((event, data)) = events.recv() {
+        match event {
+            ExternalDispatchEvent::Ready => {
+                println!("Ready event: {:?}", data);
+            },
+            _ => {}
+        }
+    }
 }
