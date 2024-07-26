@@ -64,22 +64,14 @@ impl Client {
     /// Connects to Discord's gateway API and begins
     /// receiving and sending data
     pub fn connect(&mut self) -> Result<Receiver<(ExternalDispatchEvent, GatewayDispatchEventData)>, &'static str> {
-        // Create a socket connection to Discord's Gateway API
-        let socket = Socket::new(&format!("wss://gateway.discord.gg/?v={API_VERSION}&encoding=json"));
-        // and turn the socket into an atomic reference that
-        // can be shared accross threads
-        let socket = Arc::new(Mutex::new(socket));
-
+        // Create the sender and the receiver channels for the event handler
         let (tx, rx) = mpsc::channel();
 
-        //let caches = Arc::new(Mutex::new((self.guilds, self.channels)));
         // Handle the incoming events as well as heartbeating
         // on a separate thread to ensure concurrency
         let _event_handler_thread = _handle_events(
-            Arc::clone(&socket),
             tx,
-            self.intents,
-            //Arc::clone(&caches)
+            self.intents
         );
 
         // Ideally here we'd yield the receiver
@@ -103,32 +95,26 @@ impl Client {
 
 /// Receives events from the Gateway API and forwards them to the main thread
 fn _handle_events(
-    socket: Arc<Mutex<Socket>>,
     dispatch_sender: mpsc::Sender<(ExternalDispatchEvent, GatewayDispatchEventData)>,
     intents: u64
 ) -> JoinHandle<()> {
-    let intents = Arc::new(Mutex::new(intents));
+    // Create and return the thread handle
+    thread::spawn(move || {
+        // Create a socket connection to Discord's Gateway API
+        let mut socket = Socket::new(&format!("wss://gateway.discord.gg/?v={API_VERSION}&encoding=json"));
 
-    let builder = thread::Builder::new()
-        // 128 MB stack size
-        .stack_size(STACK_SIZE_BYTES);
-
-    builder.spawn(move || {
-        let mut socket = socket.lock().unwrap();
+        // Initialize variables used to maintain the socket connection
         let mut last_sequence = 0_usize;
         let mut interval = Duration::from_secs(999_999);
         let mut next_heartbeat = Instant::now();
-
-        let intents = intents.lock().unwrap();
 
         loop {
             // Attempt to get the next event from the socket
             let event = socket.read();
 
             // Most common error is a no message
-            // Use that as an opportunity to check whether or not we need to
-            // send a hearbeat
-            if let Err(_) = event {
+            // In this case, we should send a heartbeat
+            if event.is_err() {
                 let now = Instant::now();
                 // This means not enough time has passed for us to send a heartbeat
                 if next_heartbeat > now { continue; }
@@ -139,6 +125,7 @@ fn _handle_events(
 
                 // Mark the next time a heartbeat should be sent
                 next_heartbeat = Instant::now() + interval;
+                // Skip to reading the next event
                 continue;
             }
 
@@ -247,15 +234,7 @@ fn _handle_events(
                 _ => { break; }
             }
         }
-    }).unwrap()
-}
-
-fn _patch_cache(
-    caches: Arc<Mutex<(GuildManager, ChannelManager)>>,
-    dispatch_type: &ExternalDispatchEvent,
-    dispatch_data: &Value
-) {
-    todo!();
+    })
 }
 
 // Returns a heartbeat structure to send to Discord

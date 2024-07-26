@@ -125,6 +125,6 @@ pub enum ExternalDispatchEvent {
 pub enum DispatchEvent {
     /// [GatewayDispatchEvent](s) which are meant to be handled by discord-rs
     Internal(InternalDispatchEvent),
-    /// GatewayDispatchEvent(s) which are meant to be handled by the end-user
+    /// [GatewayDispatchEvent](s) which are meant to be handled by the end-user
     External(ExternalDispatchEvent)
 }
