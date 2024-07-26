@@ -9,9 +9,8 @@ Cargo.lock
 .ignore/
 
 # Testing examples
-src/example.rs
-src/main.rs
 examples/
+tests-ignore/
 
 # Env
 .env

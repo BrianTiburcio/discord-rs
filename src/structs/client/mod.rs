@@ -1,7 +1,7 @@
 use serde_json::{json, Value};
 use std::{
     sync::{Arc, Mutex, mpsc::{self, Receiver}},
-    thread::{self, JoinHandle},
+    thread::{self, JoinHandle, panicking},
     time::{Instant, Duration}
 };
 
@@ -81,6 +81,10 @@ impl Client {
             self.intents,
             //Arc::clone(&caches)
         );
+
+        if _event_handler_thread.join().is_err() {
+            println!("Event handler thread errored!");
+        }
 
         // Ideally here we'd yield the receiver
         // but yielding is not yet stable in rust

@@ -1,22 +1,23 @@
 [package]
 name = "discord-rs"
 version = "0.2.0"
-description = "A rust library for interacting with the Discord API in a blazingly fast way"
+description = "A blazingly fast rust library for interacting with the Discord API"
 
 authors = ["Brian T. <bptiburcio@gmail.com>"]
 categories = ["api-bindings"]
 documentation = "https://docs.rs/discord-rs"
 keywords = ["discord", "chat", "bot", "api"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/BrianTib/discord-rs"
 
 edition = "2021"
-rust-version = "1.75.0"
+rust-version = "1.79.0"
 
 include = [
     "src/**",
     "Cargo.toml",
+    "COPYRIGHT",
     "LICENSE"
 ]
 
