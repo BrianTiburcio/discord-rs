@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::structs::user::User;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Application {
     pub id: String,
     pub name: String,
@@ -28,7 +28,7 @@ pub struct Application {
 
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Team {
     pub icon: Option<String>,
     pub id: String,
@@ -37,7 +37,7 @@ pub struct Team {
     pub owner_user_id: String
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TeamMember {
     pub membership_state: MembershipState,
     pub permissions: Vec<String>,
@@ -45,13 +45,13 @@ pub struct TeamMember {
     pub user: User
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MembershipState {
     Invited,
     Accepted
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct InstallParams {
     pub scopes: Vec<String>,
     pub permissions: String

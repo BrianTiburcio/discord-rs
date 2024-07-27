@@ -50,8 +50,13 @@ impl ChannelManager {
                 continue;
             }
 
-            let boxed_channel = Box::new(Channel::new(&Snowflake::String(id.to_string())).unwrap());
-            collection.push(boxed_channel.to_owned());
+            let boxed_channel = Box::new(
+                Channel::new(
+                    &Snowflake::new(id)
+                ).unwrap()
+            );
+            
+            collection.push(boxed_channel.clone());
             self.cache.set(id.to_string(), boxed_channel);
         }
 
@@ -59,7 +64,9 @@ impl ChannelManager {
     }
 
     fn _patch(&mut self, id: &String) -> Box<Channel> {
-        let boxed_channel = Box::new(Channel::new(&Snowflake::String(id.to_string())).unwrap());
+        let boxed_channel = Box::new(
+            Channel::new(&Snowflake::new(id)).unwrap()
+        );
         self.cache.set(id.to_owned(), boxed_channel.to_owned());
         boxed_channel
     }

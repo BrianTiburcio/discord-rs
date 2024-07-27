@@ -1,73 +1,39 @@
 use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Serialize, Deserialize, Deserializer};
-use serde_json::Value;
+use serde::{Serialize, Deserialize};
 use std::fmt;
 
-pub(crate) struct SnowflakeBuilder {
-    worker_id: u16,
-    sequence: u16,
-    /// Milliseconds since Discord Epoch, the first second of 2015
-    epoch: u64,
-    last_timestamp: u64,
-}
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Snowflake(String);
 
-/// A [snowflake ID](https://en.wikipedia.org/wiki/Snowflake_ID) adjusted to
-/// fit [Discord's implementation of snowflakes](https://discord.com/developers/docs/reference#snowflakes)
-#[derive(Debug, Serialize)]
-pub enum Snowflake {
-    String(String),
-    Number(u64)
-}
-
-impl<'de> Deserialize<'de> for Snowflake {
-    fn deserialize<D>(deserializer: D) -> Result<Snowflake, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let value: Value = Deserialize::deserialize(deserializer)?;
-
-        match value {
-            Value::String(s) => Ok(Snowflake::String(s)),
-            Value::Number(n) => {
-                if let Some(u) = n.as_u64() {
-                    return Ok(Snowflake::Number(u))
-                }
-
-                Err(serde::de::Error::custom("Invalid u64 value"))
-            }
-            _ => Err(serde::de::Error::custom("Invalid nonce value")),
-        }
+impl Snowflake {
+    pub fn new(id: &str) -> Self {
+        assert!(id.len() < 18, "Snowflake ID is too short");
+        Snowflake(id.to_string())
     }
-}
 
-impl From<Snowflake> for u64 {
-    fn from(value: Snowflake) -> Self {
-        match value {
-            Snowflake::String(s) => s.parse::<u64>().unwrap_or(0),
-            Snowflake::Number(s) => s,
-        }
+    /// Converts a u64 representation to a Snowflake.
+    pub fn from_u64(n: u64) -> Self {
+        Snowflake(n.to_string())
     }
-}
 
-impl From<String> for Snowflake {
-    fn from(value: String) -> Self {
-        Snowflake::String(value)
-    }
-}
-
-impl From<u64> for Snowflake {
-    fn from(value: u64) -> Self {
-        Snowflake::Number(value)
+    /// Returns the inner u64 value.
+    pub fn as_u64(&self) -> u64 {
+        self.0.parse().unwrap()
     }
 }
 
 impl fmt::Display for Snowflake {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Snowflake::String(snowflake) => write!(f, "{}", snowflake),
-            Snowflake::Number(snowflake) => write!(f, "{}", snowflake),
-        }
+        write!(f, "{}", self.0)
     }
+}
+
+// SnowflakeBuilder implementation
+pub struct SnowflakeBuilder {
+    worker_id: u16,
+    sequence: u16,
+    epoch: u64,
+    last_timestamp: u64,
 }
 
 impl SnowflakeBuilder {
@@ -82,7 +48,7 @@ impl SnowflakeBuilder {
 
     pub fn generate_id(&mut self) -> Snowflake {
         let timestamp = self.get_timestamp();
-        
+
         if timestamp < self.last_timestamp {
             panic!("Clock moved backwards!");
         }
@@ -99,22 +65,16 @@ impl SnowflakeBuilder {
 
         self.last_timestamp = timestamp;
 
-        // Construct the Snowflake ID using a 64-bit format:
-        // - 42 bits for timestamp (ms)
-        // - 10 bits for worker ID
-        // - 12 bits for sequence number
         let snowflake = ((timestamp - self.epoch) << 22) | ((self.worker_id as u64) << 12) | self.sequence as u64;
-        Snowflake::Number(snowflake)
+        Snowflake::from_u64(snowflake)
     }
 
     pub fn timestamp_to_snowflake(&self, timestamp: u64) -> Snowflake {
-        Snowflake::Number((timestamp - self.epoch) << 22)
+        Snowflake::from_u64((timestamp - self.epoch) << 22)
     }
-    
-    pub fn snowflake_to_timestamp(&self, snowflake: Snowflake) -> u64 {
-        //let snowflake = snowflake.parse::<u64>().unwrap_or(0);
-        let snowflake = u64::from(snowflake);
-        (snowflake >> 22) + self.epoch
+
+    pub fn snowflake_to_timestamp(&self, snowflake: &Snowflake) -> u64 {
+        (snowflake.as_u64() >> 22) + self.epoch
     }
 
     fn get_timestamp(&self) -> u64 {

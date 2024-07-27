@@ -1,19 +1,25 @@
 use serde_json::{json, Value};
 use std::{
-    sync::{Arc, Mutex, mpsc::{self, Receiver}},
+    sync::mpsc::{self, Receiver},
     thread::{self, JoinHandle},
     time::{Instant, Duration}
 };
 
 use crate::{
-    util::socket::{Message, Socket},
-    util::threadpool::ThreadPool,
-    util::env::{
-        _set_client_token,
-        _get_client_token,
-        _set_api_url
+    structs::{
+        timestamp::Timestamp,
+        message,
+        channel,
     },
-    structs::timestamp::Timestamp,
+    util::{
+        threadpool::ThreadPool,
+        socket,
+        env::{
+            _set_client_token,
+            _get_client_token,
+            _set_api_url
+        }
+    },
     managers::{
         ClientManager,
         ChannelManager,
@@ -23,16 +29,12 @@ use crate::{
 
 mod enums;
 mod structs;
-pub mod traits;
 
 pub use enums::*;
 pub use structs::*;
 
 // The gateway version of Discord's API to use
 const API_VERSION: u8 = 10;
-/// The size of the stack for the event handler thread
-const STACK_SIZE_MB: usize = 256;
-const STACK_SIZE_BYTES: usize = STACK_SIZE_MB * 1_000_000;
 
 /// The jitter to add to the heartbeat interval
 const HEARTBEAT_JITTER: f32 = 0.1;
@@ -63,12 +65,11 @@ impl Client {
 
     /// Connects to Discord's gateway API and begins
     /// receiving and sending data
-    pub fn connect(&mut self) -> Result<Receiver<(ExternalDispatchEvent, GatewayDispatchEventData)>, &'static str> {
+    pub fn connect(&mut self) -> Result<Receiver<(ExternalDispatchEvent, Option<ExternalDispatchEventData>)>, &'static str> {
         // Create the sender and the receiver channels for the event handler
         let (tx, rx) = mpsc::channel();
 
-        // Handle the incoming events as well as heartbeating
-        // on a separate thread to ensure concurrency
+        // Handle the incoming events as well as heartbeating on a separate thread
         let _event_handler_thread = _handle_events(
             tx,
             self.intents
@@ -95,13 +96,13 @@ impl Client {
 
 /// Receives events from the Gateway API and forwards them to the main thread
 fn _handle_events(
-    dispatch_sender: mpsc::Sender<(ExternalDispatchEvent, GatewayDispatchEventData)>,
+    dispatch_sender: mpsc::Sender<(ExternalDispatchEvent, Option<ExternalDispatchEventData>)>,
     intents: u64
 ) -> JoinHandle<()> {
     // Create and return the thread handle
     thread::spawn(move || {
         // Create a socket connection to Discord's Gateway API
-        let mut socket = Socket::new(&format!("wss://gateway.discord.gg/?v={API_VERSION}&encoding=json"));
+        let mut socket = socket::Socket::new(&format!("wss://gateway.discord.gg/?v={API_VERSION}&encoding=json"));
 
         // Initialize variables used to maintain the socket connection
         let mut last_sequence = 0_usize;
@@ -130,7 +131,7 @@ fn _handle_events(
             }
 
             match event.unwrap() {
-                Message::Text(message) => {
+                socket::Message::Text(message) => {
                     last_sequence += 1;
 
                     let event = serde_json::from_str::<GatewayEventBody>(&message)
@@ -140,13 +141,16 @@ fn _handle_events(
 
                     match event_type {
                         GatewayEvent::Dispatch => {
-                            let dispatch_data = event.d.unwrap();
                             let dispatch_type = event.t.as_deref().map(|dispatch_type| DispatchEventIndexer[dispatch_type])
                                 .expect("Failed to deserialize event type for dispatch event");
 
                             // Only inform the end user of dispatch events that they can handle
                             if let DispatchEvent::External(dispatch_type) = dispatch_type {
+                                let dispatch_data = event.d.unwrap();
+                                let dispatch_data = _parse_event_data(dispatch_type, dispatch_data);
+
                                 // TODO: Patch the cache before forwarding the event to the end-user
+                                // Depending on the type of event, we can update some cache
                                 // _patch_cache(
                                 //     Arc::clone(&caches), 
                                 //     &dispatch_type, 
@@ -155,7 +159,6 @@ fn _handle_events(
 
                                 //println!("{:#?}: {:#?}", dispatch_type, dispatch_data);
 
-                                // Depending on the type of event, we can update some cache
                                 // Allow the event to be handled by the end-user
                                 let _ = dispatch_sender.send((dispatch_type, dispatch_data));
                             }
@@ -226,7 +229,7 @@ fn _handle_events(
                         },
                     };
                 },
-                Message::Close(_) => { break; },
+                socket::Message::Close(_) => { break; },
                 // Message::Binary(_) => {}
                 // Message::Frame(_) => {},
                 // Message::Ping(_) => {},
@@ -237,8 +240,35 @@ fn _handle_events(
     })
 }
 
+// Parses the event data from the dispatch event
+fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> Option<ExternalDispatchEventData> {
+    match event_type {
+        // No data for the ready event
+        ExternalDispatchEvent::Ready => None,
+        // Message events
+        ExternalDispatchEvent::MessageCreate
+        | ExternalDispatchEvent::MessageDelete
+        | ExternalDispatchEvent::MessageUpdate => {
+            let message = serde_json::from_value::<message::Message>(data)
+                .expect("Failed to parse message data from JSON");
+
+            Some(ExternalDispatchEventData::Message(message))
+        },
+        // Channel Events
+        ExternalDispatchEvent::ChannelCreate
+        | ExternalDispatchEvent::ChannelDelete
+        | ExternalDispatchEvent::ChannelUpdate => {
+            let channel = serde_json::from_value::<channel::Channel>(data)
+                .expect("Failed to parse channel data from JSON");
+
+            Some(ExternalDispatchEventData::Channel(channel))
+        },
+        _ => None
+    }
+}
+
 // Returns a heartbeat structure to send to Discord
-fn _get_heartbeat(sequence: usize) -> Message {
+fn _get_heartbeat(sequence: usize) -> socket::Message {
     let heartbeat = GatewayEventBody {
         op: GatewayEvent::Heartbeat as usize,
         d: Some(Value::Number(sequence.into())),
@@ -246,10 +276,10 @@ fn _get_heartbeat(sequence: usize) -> Message {
         t: None,
     };
     
-    Message::text(serde_json::to_string(&heartbeat).unwrap())
+    socket::Message::text(serde_json::to_string(&heartbeat).unwrap())
 }
 
-fn _get_identify(token: &String, intents: &u64) -> Message {
+fn _get_identify(token: &String, intents: &u64) -> socket::Message {
     // Structure the initial identify request
     let identify = GatewayEventBody {
         op: GatewayEvent::Identify as usize,
@@ -268,5 +298,5 @@ fn _get_identify(token: &String, intents: &u64) -> Message {
 
     // Serialize the identify request into JSON
     let identify = serde_json::to_string(&identify).unwrap();
-    Message::text(identify)
+    socket::Message::text(identify)
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageActivity {
     Join = 1,
     Spectate = 2,
@@ -8,7 +8,7 @@ pub enum MessageActivity {
     JoinRequest = 5
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageType {
     Default,
     RecipientAdd,

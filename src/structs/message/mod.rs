@@ -4,8 +4,8 @@ use crate::structs::channel::Channel;
 pub mod enums;
 pub use enums::*;
 
-pub mod types;
-pub use types::*;
+pub mod structs;
+pub use structs::*;
 
 impl Message {
     // pub fn from(json: Value, cache: Arc<Mutex<ClientCache>>) -> Result<Self, &'static str> {

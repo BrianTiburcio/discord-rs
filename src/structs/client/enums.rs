@@ -1,5 +1,10 @@
 use serde::{Serialize, Deserialize};
 
+use crate::structs::{
+    message::Message,
+    channel::Channel
+};
+
 // Note: You dont need to assign an explicit value to all enums
 // If there is specificity needed, assign a value to just one
 // and rust will automatically assign the appropriate values to the ones that follow
@@ -115,6 +120,12 @@ pub enum ExternalDispatchEvent {
     VoiceStateUpdate,
     WebhooksUpdate,
     VoiceServerUpdate
+}
+
+#[derive(Debug)]
+pub enum ExternalDispatchEventData {
+    Message(Message),
+    Channel(Channel)
 }
 
 #[derive(Debug, Copy, Clone)]

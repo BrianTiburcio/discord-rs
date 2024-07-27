@@ -22,12 +22,11 @@ pub mod structs {
     pub mod sticker;
     pub mod timestamp;
     pub mod user;
-    #[cfg(feature = "webhook")]
+    #[cfg(feature = "webhooks")]
     pub mod webhook;
 }
 
-// TOOD: make this pub(crate) again
-pub mod util {
+pub(crate) mod util {
     pub mod rest;
     pub mod threadpool;
     pub mod socket;

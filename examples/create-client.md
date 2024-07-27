@@ -1,5 +1,6 @@
 ```rs
-use discord_rs::structs::client::{Client, GatewayIntents};
+use discord_rs::structs::client::{Client, GatewayIntents, ExternalDispatchEvent};
+use dotenv;
 
 fn main() {
     // Obtain/Define your bot's token
@@ -14,7 +15,18 @@ fn main() {
 
     // Create a mutable instance of your bot
     let mut client = Client::new(&token, intents);
-    // Connect your bot to the discord API
-    let _ = client.connect();
+    let events = client.connect().expect("Error connecting to gateway");
+
+    // Start listening to events from the websocket
+    loop {
+        if let Ok((event, _data)) = events.recv() {
+            match event {
+                ExternalDispatchEvent::Ready => {
+                    println!("My bot is online!");
+                },
+                _ => {}
+            }
+        }
+    }
 }
 ```

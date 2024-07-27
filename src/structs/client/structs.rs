@@ -21,8 +21,6 @@ use super::{
     ExternalDispatchEvent as EDE
 };
 
-pub type GatewayDispatchEventData = Value;
-
 pub struct Client {
     pub cache: ClientManager,
     pub guilds: GuildManager,
@@ -34,7 +32,7 @@ pub struct Client {
     pub intents: u64
 }
 
-pub struct SessionStartLimitObject {
+pub(crate) struct SessionStartLimitObject {
     pub total: i32,
     pub remaining: i32,
     pub reset_after: u32,
@@ -42,7 +40,7 @@ pub struct SessionStartLimitObject {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GatewayEventBody {
+pub(crate) struct GatewayEventBody {
     pub op: usize,
     pub d: Option<serde_json::Value>,
     pub s: Option<u32>,

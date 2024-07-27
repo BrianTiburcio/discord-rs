@@ -8,12 +8,12 @@ use crate::structs::{
     embed::Embed,
     member::Member,
     message::enums::{MessageType, MessageActivity},
+    nonce::Nonce,
     reaction::Reaction,
     role::Role,
     snowflake::Snowflake,
     sticker::Sticker,
-    user::User,
-    nonce::Nonce
+    user::User
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -22,6 +22,8 @@ pub struct Message {
     pub id: Snowflake,
     /// id of the channel the message was sent in
     pub channel_id: Option<Snowflake>,
+    #[serde(skip)]
+    pub channel: Option<Channel>,
     pub author: User,
     pub content: String,
     // TODO: ISO8601 timestamp
@@ -60,31 +62,9 @@ pub struct Message {
     pub role_subscription_data: Option<Value>,
     // TODO: Make this is a ResolvedData object https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-resolved-data-structure
     pub resolved: Option<Value>,
-    #[serde(skip)]
-    pub channel: Option<Channel>,
     pub guild_id: Option<String>,
     pub member: Option<Member>,
 }
-
-// impl<'de> Deserialize<'de> for Message {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: Deserializer<'de>,
-//     {
-//         println!("Beginning deserialize");
-//         let mut message: Message = Deserialize::deserialize(deserializer)?;
-
-//         if let Some(channel_id) = message.channel_id {
-//             let channel = Channel::new(&channel_id)
-//                 .expect("Failed to deserialize channel");
-
-//             message.channel = Some(channel);
-//         }
-
-//         println!("Success! Returning...");
-//         Ok(message)
-//     }
-// }
 
 // #[derive(Serialize, Deserialize, Debug)]
 // pub struct Author {
@@ -156,6 +136,6 @@ where
 
 impl From<Value> for Message {
     fn from(value: Value) -> Self {
-        serde_json::from_value(value).unwrap()
+        serde_json::from_value(value).expect("Failed to deserialize message from value")
     }
 }
