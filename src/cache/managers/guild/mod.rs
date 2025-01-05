@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::util::rest::get;
+use crate::http::get;
 use crate::cache::CacheManager;
 use crate::models::guild::Guild;
 

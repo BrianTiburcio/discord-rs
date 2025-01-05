@@ -1,10 +1,9 @@
-mod channel;
-mod guild;
-mod client;
+pub(crate) mod client;
+pub(crate) mod channel;
+pub(crate) mod guild;
 
-#[allow(unused_imports)]
 pub(crate) use {
     channel::ChannelManager,
     guild::GuildManager,
-    client::ClientManager
+    client::ClientManager,
 };

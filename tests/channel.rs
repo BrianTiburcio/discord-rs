@@ -1,5 +1,5 @@
 use serde_json;
-use discord_rs::structs::{
+use discord_rs::models::{
     channel::Channel,
     snowflake::Snowflake
 };

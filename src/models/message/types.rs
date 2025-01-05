@@ -25,7 +25,7 @@ pub struct Message {
     #[serde(skip)]
     pub channel: Option<Channel>,
     pub author: Option<User>,
-    pub content: String,
+    pub content: Option<String>,
     // TODO: ISO8601 timestamp
     pub timestamp: String,
     // TODO: ISO8601 timestamp

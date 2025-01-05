@@ -1,4 +1,9 @@
-mod socket;
+pub mod socket;
+pub mod enums;
+pub mod types;
+
+pub use enums::*;
+use types::*;
 
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
@@ -6,30 +11,12 @@ use serde_json::{json, Value};
 use socket::Message;
 
 use crate::{
+    util::env::_get_client_token,
     models::{
         message,
         channel,
-    },
-    util::env::{
-        _get_client_token,
-        _get_gateway_url,
-    },
-    client::{
-        types::{
-            GatewayEventIndexer,
-            GatewayEventBody,
-            DispatchEventIndexer,
-        },
-        enums::{
-            DispatchEvent,
-            GatewayEvent,
-            ExternalDispatchEvent,
-            ExternalDispatchEventData,
-        }
-    },
+    }
 };
-
-// use crate::
 
 /// The jitter to add to the heartbeat interval
 const HEARTBEAT_JITTER: f32 = 0.1;
@@ -37,7 +24,7 @@ const HEARTBEAT_JITTER: f32 = 0.1;
 pub struct Gateway {}
 
 impl Gateway {
-    pub fn new(sender: &mpsc::Sender<(ExternalDispatchEvent, Option<ExternalDispatchEventData>)>, intents: u64) {
+    pub fn new(sender: &mpsc::Sender<(ExternalDispatchEvent, ExternalDispatchEventData)>, intents: u64) {
         let mut socket = socket::Socket::gateway();
         
         // Initialize variables used to maintain the socket connection
@@ -49,8 +36,8 @@ impl Gateway {
             // Attempt to get the next event from the socket
             let event = socket.read();
 
-            // Most common error is a no message
-            // In this case, we should send a heartbeat
+            // Most common error is a no-message
+            // In this case, we should check if we need to send a heartbeat
             if event.is_err() {
                 // TODO: Panic if its not a no-message errror
                 let now = Instant::now();
@@ -83,9 +70,8 @@ impl Gateway {
                     let event = serde_json::from_str::<GatewayEventBody>(&message)
                         .expect("Failed to deserialize incoming data JSON");
 
-                    let event_type = GatewayEventIndexer[event.op];
-
-                    match event_type {
+                    // Match the event type
+                    match GatewayEventIndexer[event.op] {
                         GatewayEvent::Dispatch => {
                             let dispatch_type = event.t.as_deref().map(|dispatch_type| DispatchEventIndexer[dispatch_type])
                                 .expect("Failed to deserialize event type for dispatch event");
@@ -127,7 +113,6 @@ impl Gateway {
                                 .expect("Failed to send identify payload");
 
                             panic!("Disconnected from the socket!");
-
                         },
                         GatewayEvent::RequestGuildMembers => {
                             println!("Got request guild members event: {:#?}", event);
@@ -206,10 +191,10 @@ fn _get_identify(token: &String, intents: &u64) -> socket::Message {
 }
 
 // Parses the event data from the dispatch event
-fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> Option<ExternalDispatchEventData> {
+fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> ExternalDispatchEventData {
     match event_type {
         // No data for the ready event
-        ExternalDispatchEvent::Ready => None,
+        ExternalDispatchEvent::Ready => ExternalDispatchEventData::None,
         // Message events
         ExternalDispatchEvent::MessageCreate
         | ExternalDispatchEvent::MessageDelete
@@ -217,7 +202,7 @@ fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> Option<E
             let message = serde_json::from_value::<message::Message>(data)
                 .expect("Failed to parse message data from JSON");
 
-            Some(ExternalDispatchEventData::Message(message))
+            ExternalDispatchEventData::Message(message)
         },
         // Channel Events
         ExternalDispatchEvent::ChannelCreate
@@ -226,8 +211,8 @@ fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> Option<E
             let channel = serde_json::from_value::<channel::Channel>(data)
                 .expect("Failed to parse channel data from JSON");
 
-            Some(ExternalDispatchEventData::Channel(channel))
+                ExternalDispatchEventData::Channel(channel)
         },
-        _ => None
+        _ => ExternalDispatchEventData::None
     }
 }

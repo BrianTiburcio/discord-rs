@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::models::timestamp::Timestamp;
 
-pub(crate) mod managers;
+pub mod managers;
 
 trait CacheData: Clone + Send + 'static {}
 

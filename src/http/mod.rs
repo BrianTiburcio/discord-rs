@@ -1,14 +1,13 @@
-use crate::util::env::{
-    _get_api_url,
-    _get_client_token
-};
-
+use reqwest::Error as ReqwestError;
 use reqwest::blocking::{
     Client as ReqwestClient,
     Response,
 };
 
-use reqwest::Error as ReqwestError;
+use crate::util::env::{
+    _get_api_url,
+    _get_client_token
+};
 
 #[derive(Debug)]
 pub enum RequestError {
@@ -51,6 +50,10 @@ fn perform_request(
     let token = _get_client_token()
         .map_err(|_| RequestError::MissingEnvironmentVariable("CLIENT TOKEN".to_owned()))?;
 
+    // Access the package version and repository URL from environment variables
+    const BOT_VERSION: &str = env!("CARGO_PKG_VERSION");
+    const BOT_REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+
     let client = ReqwestClient::new();
     let url = format!("{}/{}", base_url, path);
 
@@ -64,6 +67,8 @@ fn perform_request(
 
     request
         .header("Authorization", format!("Bot {}", token))
+        // https://discord.com/developers/docs/reference#user-agent-user-agent-example
+        .header("User-Agent", format!("DiscordBot ({}, v{})", BOT_REPOSITORY, BOT_VERSION))
         .header("Content-Type", "application/json")
         .body(body.unwrap_or("").to_owned())
         .send()

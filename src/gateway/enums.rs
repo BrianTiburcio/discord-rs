@@ -2,8 +2,29 @@ use serde::{Serialize, Deserialize};
 
 use crate::models::{
     message::Message,
-    channel::Channel
+    channel::Channel,
+    guild::Guild
 };
+
+#[derive(Debug)]
+pub enum ExternalDispatchEventData {
+    Message(Message),
+    Channel(Channel),
+    Guild(Guild),
+    None,
+}
+
+/// [Discord's Gateway Dispatch events](https://discord.com/developers/docs/topics/gateway-events#gateway-events) events
+/// 
+/// [DispatchEvent::Internal] events are meant to be handled by discord-rs
+/// [DispatchEvent::External] events are meant to be handled by the library user
+#[derive(Debug, Copy, Clone)]
+pub enum DispatchEvent {
+    /// DispatchEvents which are meant to be handled by discord-rs
+    Internal(InternalDispatchEvent),
+    /// DispatchEvents which are meant to be handled by the end-user
+    External(ExternalDispatchEvent)
+}
 
 // Note: You dont need to assign an explicit value to all enums
 // If there is specificity needed, assign a value to just one
@@ -120,22 +141,4 @@ pub enum ExternalDispatchEvent {
     VoiceStateUpdate,
     WebhooksUpdate,
     VoiceServerUpdate
-}
-
-#[derive(Debug)]
-pub enum ExternalDispatchEventData {
-    Message(Message),
-    Channel(Channel)
-}
-
-/// [Discord's Gateway Dispatch events](https://discord.com/developers/docs/topics/gateway-events#gateway-events) events
-/// 
-/// [DispatchEvent::Internal] events are meant to be handled by discord-rs
-/// [DispatchEvent::External] events are meant to be handled by the library user
-#[derive(Debug, Copy, Clone)]
-pub enum DispatchEvent {
-    /// [GatewayDispatchEvent](s) which are meant to be handled by discord-rs
-    Internal(InternalDispatchEvent),
-    /// [GatewayDispatchEvent](s) which are meant to be handled by the end-user
-    External(ExternalDispatchEvent)
 }

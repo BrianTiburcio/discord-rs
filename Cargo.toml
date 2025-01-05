@@ -1,6 +1,6 @@
 [package]
 name = "discord-rs"
-version = "0.2.0"
+version = "0.2.1"
 description = "A blazingly fast rust library for interacting with the Discord API"
 
 authors = ["Brian T. <bptiburcio@gmail.com>"]
@@ -12,7 +12,7 @@ readme = "README.md"
 repository = "https://github.com/BrianTib/discord-rs"
 
 edition = "2021"
-rust-version = "1.79.0"
+rust-version = "1.83.0"
 
 include = [
     "src/**",
@@ -28,14 +28,14 @@ doctest = false
 webhooks = []
 
 [dependencies]
-chrono = "0.4.38"
+chrono = "0.4.39"
 native-tls = "0.2.12"
-reqwest = { version = "0.12.9", features = ["blocking", "json"] }
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = { version = "1.0.133", features = ["unbounded_depth"] }
+reqwest = { version = "0.12.12", features = ["blocking", "json"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = { version = "1.0.134", features = ["unbounded_depth"] }
 serde_repr = "0.1.19"
-serde_with = "3.11.0"
-tungstenite = { version = "0.24.0", features = ["native-tls"] }
+serde_with = "3.12.0"
+tungstenite = { version = "0.26.1", features = ["native-tls"] }
 url = "2.5.3"
 
 [dev-dependencies]
