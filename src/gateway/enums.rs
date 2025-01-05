@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::models::{
     message::Message,
     channel::Channel,
-    guild::Guild
+    guild::Guild,
 };
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub enum ExternalDispatchEventData {
     Message(Message),
     Channel(Channel),
     Guild(Guild),
+    Ready(super::types::ReadyEvent),
     None,
 }
 

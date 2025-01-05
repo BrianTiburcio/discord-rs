@@ -28,9 +28,11 @@ impl Gateway {
         let mut socket = socket::Socket::gateway();
         
         // Initialize variables used to maintain the socket connection
-        let mut last_sequence = 0_usize;
-        let mut interval = Duration::from_secs(5);
+        let mut last_sequence = 0_u32;
+        let mut interval = Duration::from_secs(45);
         let mut next_heartbeat = Instant::now();
+        let mut session_id = "".to_string();
+        let mut resume_gateway_url = "".to_string();
 
         loop {
             // Attempt to get the next event from the socket
@@ -73,13 +75,19 @@ impl Gateway {
                     // Match the event type
                     match GatewayEventIndexer[event.op] {
                         GatewayEvent::Dispatch => {
-                            let dispatch_type = event.t.as_deref().map(|dispatch_type| DispatchEventIndexer[dispatch_type])
+                            let dispatch_type = event.t.as_deref()
+                                .map(|dispatch_type| DispatchEventIndexer[dispatch_type])
                                 .expect("Failed to deserialize event type for dispatch event");
 
                             // Only inform the end user of dispatch events that they can handle
                             if let DispatchEvent::External(dispatch_type) = dispatch_type {
                                 let dispatch_data = event.d.unwrap();
                                 let dispatch_data = _parse_event_data(dispatch_type, dispatch_data);
+
+                                if let ExternalDispatchEventData::Ready(ready) = &dispatch_data {
+                                    session_id = ready.session_id.clone();
+                                    resume_gateway_url = ready.resume_gateway_url.clone();
+                                }
 
                                 // Allow the event to be handled by the end-user
                                 let _ = sender.send((dispatch_type, dispatch_data));
@@ -102,17 +110,25 @@ impl Gateway {
                         },
                         // Connection was likely dropped on discord's end. Mend it
                         GatewayEvent::Reconnect => {
+                            if session_id.len() == 0 || resume_gateway_url.len() == 0 {
+                                panic!("Cannot reconnect without a session id or resume gateway url");
+                            }
+                            
+                            // Reconnect the socket to the gateway
+                            socket.reconnect();
+
                             let token = _get_client_token()
                                 .expect("Could not get user token!");
 
-                            // TODO: Create new connection
-                            // Get and send the identify payload
-                            // This allows to start receiving other events
-                            let identify = _get_identify(&token, &intents);
-                            socket.send(identify)
-                                .expect("Failed to send identify payload");
+                            // Get and send the resume payload
+                            let resume = _get_resume(
+                                &token,
+                                &session_id,
+                                last_sequence
+                            );
 
-                            panic!("Disconnected from the socket!");
+                            socket.send(resume)
+                                .expect("Failed to send resume payload");
                         },
                         GatewayEvent::RequestGuildMembers => {
                             println!("Got request guild members event: {:#?}", event);
@@ -157,7 +173,7 @@ impl Gateway {
 }
 
 // Returns a heartbeat structure to send to Discord
-fn _get_heartbeat(sequence: usize) -> socket::Message {
+fn _get_heartbeat(sequence: u32) -> socket::Message {
     let heartbeat = GatewayEventBody {
         op: GatewayEvent::Heartbeat as usize,
         d: Some(Value::Number(sequence.into())),
@@ -190,11 +206,34 @@ fn _get_identify(token: &String, intents: &u64) -> socket::Message {
     socket::Message::text(identify)
 }
 
+fn _get_resume(token: &String, session_id: &String, sequence: u32) -> socket::Message {
+    // Structure the resume request
+    let resume = GatewayEventBody {
+        op: GatewayEvent::Resume as usize,
+        s: Some(sequence),
+        t: None,
+        d: Some(json!({
+            "token": token,
+            "session_id": session_id,
+            "seq": sequence
+        }))
+    };
+
+    // Serialize the resume request into JSON
+    let resume = serde_json::to_string(&resume).unwrap();
+    socket::Message::text(resume)
+}
+
 // Parses the event data from the dispatch event
 fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> ExternalDispatchEventData {
     match event_type {
         // No data for the ready event
-        ExternalDispatchEvent::Ready => ExternalDispatchEventData::None,
+        ExternalDispatchEvent::Ready => {
+            let ready = serde_json::from_value::<ReadyEvent>(data)
+                .expect("Failed to parse ready data from JSON");
+
+            ExternalDispatchEventData::Ready(ready)
+        },
         // Message events
         ExternalDispatchEvent::MessageCreate
         | ExternalDispatchEvent::MessageDelete
@@ -213,6 +252,7 @@ fn _parse_event_data(event_type: ExternalDispatchEvent, data: Value) -> External
 
                 ExternalDispatchEventData::Channel(channel)
         },
+
         _ => ExternalDispatchEventData::None
     }
 }

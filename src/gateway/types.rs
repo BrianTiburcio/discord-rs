@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 use std::ops::Index;
+use crate::models::application::Application;
 
 use super::{
     DispatchEvent as DE,
@@ -38,6 +39,17 @@ impl Index<usize> for GatewayEventIndexer {
             _ => panic!("Index out of bounds"),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub(crate) struct ReadyEvent {
+    pub v: u8,
+    pub user: serde_json::Value,
+    pub guilds: Vec<serde_json::Value>,
+    pub resume_gateway_url: String,
+    pub session_id: String,
+    pub shard: Option<Vec<u8>>,
+    pub application: Application
 }
 
 pub(crate) struct DispatchEventIndexer;

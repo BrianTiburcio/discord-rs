@@ -66,6 +66,7 @@ fn perform_request(
     };
 
     request
+        // https://discord.com/developers/docs/reference#authentication-example-bot-token-authorization-header
         .header("Authorization", format!("Bot {}", token))
         // https://discord.com/developers/docs/reference#user-agent-user-agent-example
         .header("User-Agent", format!("DiscordBot ({}, v{})", BOT_REPOSITORY, BOT_VERSION))
