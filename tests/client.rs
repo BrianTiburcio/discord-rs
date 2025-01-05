@@ -14,7 +14,7 @@ impl EventHandler for MyEventHandler {
 #[test]
 fn create_client() {
     // Obtain your bot's token.
-    let token = "YOUR BOT TOKEN HERE";
+    let token = "";
     
     // Define the intents your bot will have
     // Learn more about intents here
