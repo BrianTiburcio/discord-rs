@@ -13,7 +13,7 @@ impl EventHandler for MyEventHandler {
 
 fn main() {
     // Obtain your bot's token.
-    let token = "MTExOTAyNzI4MDE5NTM2MjgzNg.GAW4Mb.UgzTyOdhVZqLA5j5N9jm0EDx_W6XemUYGYc7xs";
+    let token = "YOUR BOT TOKEN HERE";
     
     // Define the intents your bot will have
     // Learn more about intents here
